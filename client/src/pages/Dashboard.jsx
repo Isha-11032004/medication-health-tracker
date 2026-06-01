@@ -33,6 +33,7 @@ export default function Dashboard() {
   const [todayMeds, setTodayMeds] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [weekly, setWeekly] = useState(null);
+  const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loggingKey, setLoggingKey] = useState(null);
   const [toast, setToast] = useState('');
@@ -48,6 +49,7 @@ export default function Dashboard() {
     setTodayMeds(medsRes.data.medications || []);
     setAppointments(aptRes.data.appointments || []);
     setWeekly(weeklyRes.data.weekly);
+    setSummary(medsRes.data.summary || null);
     refreshSchedule?.();
   }, [patientQuery, refreshSchedule]);
 
@@ -71,10 +73,9 @@ export default function Dashboard() {
     [weekly, todayMeds]
   );
 
-  const todayDoses = useMemo(() => flattenTodayDoses(todayMeds), [todayMeds]);
-  const takenTodayCount = useMemo(() => todayDoses.filter((d) => d.status === 'taken').length, [todayDoses]);
-  const missedTodayCount = useMemo(() => todayDoses.filter((d) => d.status === 'missed').length, [todayDoses]);
-  const pendingTodayCount = useMemo(() => todayDoses.filter((d) => d.status !== 'taken' && d.status !== 'missed').length, [todayDoses]);
+  const takenTodayCount = summary?.taken ?? 0;
+  const missedTodayCount = summary?.missed ?? 0;
+  const pendingTodayCount = Math.max(0, (summary?.scheduled ?? 0) - takenTodayCount - missedTodayCount);
 
   const logDose = async (med, timeStr, status) => {
     const slot = normalizeTime(timeStr);
