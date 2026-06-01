@@ -1,14 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
-import {
   Clock,
   Calendar,
   TrendingUp,
@@ -31,6 +23,7 @@ import {
   getNextAppointment,
   getPendingDosesCount,
   generateSmartInsight,
+  flattenTodayDoses,
 } from '../utils/dashboardInsights';
 
 export default function Dashboard() {
@@ -77,6 +70,11 @@ export default function Dashboard() {
     () => generateSmartInsight(weekly, todayMeds),
     [weekly, todayMeds]
   );
+
+  const todayDoses = useMemo(() => flattenTodayDoses(todayMeds), [todayMeds]);
+  const takenTodayCount = useMemo(() => todayDoses.filter((d) => d.status === 'taken').length, [todayDoses]);
+  const missedTodayCount = useMemo(() => todayDoses.filter((d) => d.status === 'missed').length, [todayDoses]);
+  const pendingTodayCount = useMemo(() => todayDoses.filter((d) => d.status !== 'taken' && d.status !== 'missed').length, [todayDoses]);
 
   const logDose = async (med, timeStr, status) => {
     const slot = normalizeTime(timeStr);
@@ -179,57 +177,50 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Pending doses */}
+        {/* Weekly Adherence (Percentage Only) */}
         <div className="card transition hover:shadow-md hover:-translate-y-0.5">
-          <div className="flex items-center gap-2 text-amber-600 mb-2">
-            <ListChecks className="w-5 h-5" />
-            <span className="text-sm font-semibold uppercase tracking-wide">Pending today</span>
+          <div className="flex items-center gap-2 text-green-600 mb-2">
+            <TrendingUp className="w-5 h-5" />
+            <span className="text-sm font-semibold uppercase tracking-wide">Weekly adherence</span>
           </div>
-          <p className="text-4xl font-bold text-slate-800 dark:text-white">{pendingCount}</p>
-          <p className="text-sm text-slate-500 mt-1">
-            dose{pendingCount !== 1 ? 's' : ''} left to record
+          <p className="text-4xl font-bold text-slate-800 dark:text-white">
+            {weekly?.weekAdherencePercent ?? 0}%
           </p>
+          <p className="text-sm text-slate-500 mt-1">Overall weekly adherence rate</p>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        {/* Weekly adherence */}
-        <div className="card transition hover:shadow-md">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2 text-green-600">
-              <TrendingUp className="w-5 h-5" />
-              <span className="text-sm font-semibold uppercase tracking-wide">Weekly adherence</span>
-            </div>
-            <span className="text-2xl font-bold text-green-600">
-              {weekly?.weekAdherencePercent ?? 0}%
-            </span>
+      {/* Today's progress counters */}
+      <div className="space-y-2">
+        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Today&apos;s Progress</h2>
+        <div className="grid grid-cols-3 gap-4">
+          {/* Taken today */}
+          <div className="card bg-green-50/20 border border-green-100/50 py-4 px-5">
+            <p className="text-xs font-semibold text-green-600 uppercase tracking-wider">Taken Today</p>
+            <p className="text-2xl font-bold text-green-700 mt-1">{takenTodayCount}</p>
           </div>
-          <div className="h-36">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={weekly?.days || []}>
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="adherence"
-                  stroke="#0d9488"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
 
-        {/* Smart insight */}
-        <div className="card bg-gradient-to-br from-medical-50 to-white dark:from-slate-800 dark:to-slate-900 transition hover:shadow-md">
-          <div className="flex items-center gap-2 text-medical-700 dark:text-medical-300 mb-3">
-            <Lightbulb className="w-5 h-5" />
-            <span className="text-sm font-semibold uppercase tracking-wide">Smart insight</span>
+          {/* Missed today */}
+          <div className="card bg-red-50/20 border border-red-100/50 py-4 px-5">
+            <p className="text-xs font-semibold text-red-600 uppercase tracking-wider">Missed Today</p>
+            <p className="text-2xl font-bold text-red-700 mt-1">{missedTodayCount}</p>
           </div>
-          <p className="text-slate-700 dark:text-slate-200 leading-relaxed">{insight}</p>
+
+          {/* Pending today */}
+          <div className="card bg-amber-50/20 border border-amber-100/50 py-4 px-5">
+            <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider">Pending Today</p>
+            <p className="text-2xl font-bold text-amber-700 mt-1">{pendingTodayCount}</p>
+          </div>
         </div>
+      </div>
+
+      {/* Smart insight */}
+      <div className="card bg-gradient-to-br from-medical-50 to-white dark:from-slate-800 dark:to-slate-900 transition hover:shadow-md">
+        <div className="flex items-center gap-2 text-medical-700 dark:text-medical-300 mb-3">
+          <Lightbulb className="w-5 h-5" />
+          <span className="text-sm font-semibold uppercase tracking-wide">Smart health insight</span>
+        </div>
+        <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-medium">{insight}</p>
       </div>
 
       {/* Today's medicines with alarm-friendly buttons */}
