@@ -5,7 +5,6 @@ import {
   Calendar,
   TrendingUp,
   Lightbulb,
-  ListChecks,
   Pill,
   ArrowRight,
 } from 'lucide-react';
@@ -73,9 +72,7 @@ export default function Dashboard() {
     [weekly, todayMeds]
   );
 
-  const takenTodayCount = summary?.taken ?? 0;
-  const missedTodayCount = summary?.missed ?? 0;
-  const pendingTodayCount = Math.max(0, (summary?.scheduled ?? 0) - takenTodayCount - missedTodayCount);
+
 
   const logDose = async (med, timeStr, status) => {
     const slot = normalizeTime(timeStr);
@@ -191,29 +188,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Today's progress counters */}
-      <div className="space-y-2">
-        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Today&apos;s Progress</h2>
-        <div className="grid grid-cols-3 gap-4">
-          {/* Taken today */}
-          <div className="card bg-green-50/20 border border-green-100/50 py-4 px-5">
-            <p className="text-xs font-semibold text-green-600 uppercase tracking-wider">Taken Today</p>
-            <p className="text-2xl font-bold text-green-700 mt-1">{takenTodayCount}</p>
-          </div>
 
-          {/* Missed today */}
-          <div className="card bg-red-50/20 border border-red-100/50 py-4 px-5">
-            <p className="text-xs font-semibold text-red-600 uppercase tracking-wider">Missed Today</p>
-            <p className="text-2xl font-bold text-red-700 mt-1">{missedTodayCount}</p>
-          </div>
-
-          {/* Pending today */}
-          <div className="card bg-amber-50/20 border border-amber-100/50 py-4 px-5">
-            <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider">Pending Today</p>
-            <p className="text-2xl font-bold text-amber-700 mt-1">{pendingTodayCount}</p>
-          </div>
-        </div>
-      </div>
 
       {/* Smart insight */}
       <div className="card bg-gradient-to-br from-medical-50 to-white dark:from-slate-800 dark:to-slate-900 transition hover:shadow-md">
@@ -250,8 +225,20 @@ export default function Dashboard() {
                 key={med._id}
                 className="card border-l-4 border-l-medical-500 hover:shadow-md transition"
               >
-                <p className="font-semibold">{med.name}</p>
-                <p className="text-sm text-slate-500 mb-3">{med.dosage}</p>
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="font-semibold text-lg text-slate-800 dark:text-white">{med.name}</h3>
+                    <p className="text-sm text-slate-500">{med.dosage}</p>
+                  </div>
+                  <div className="flex gap-3 text-sm">
+                    <span className="bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 px-2 py-1 rounded-md font-medium">
+                      Taken: {med.doseLogs?.filter((l) => l.status === 'taken').length || 0}
+                    </span>
+                    <span className="bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 px-2 py-1 rounded-md font-medium">
+                      Missed: {med.doseLogs?.filter((l) => l.status === 'missed').length || 0}
+                    </span>
+                  </div>
+                </div>
                 {user?.role === 'patient' &&
                   (med.times || []).map((raw) => {
                     const t = normalizeTime(raw);

@@ -1,8 +1,8 @@
-import { Pill, Calendar, BellOff, Check, X } from 'lucide-react';
+import { Pill, Calendar, BellOff } from 'lucide-react';
 import { useAlarm } from '../context/AlarmContext';
 
 export default function AlarmModal() {
-  const { activeAlarm, stopAlarm, markMedicationDose } = useAlarm();
+  const { activeAlarm, stopAlarm } = useAlarm();
 
   if (!activeAlarm) return null;
 
@@ -38,24 +38,6 @@ export default function AlarmModal() {
         </div>
 
         <div className="flex flex-col gap-2">
-          {isMed && (
-            <>
-              <button
-                type="button"
-                onClick={() => markMedicationDose('taken')}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold transition shadow-lg"
-              >
-                <Check className="w-5 h-5" /> Mark as Taken
-              </button>
-              <button
-                type="button"
-                onClick={() => markMedicationDose('missed')}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold transition shadow-lg"
-              >
-                <X className="w-5 h-5" /> Mark as Missed
-              </button>
-            </>
-          )}
           <button
             type="button"
             onClick={stopAlarm}
