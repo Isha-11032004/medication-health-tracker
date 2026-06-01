@@ -6,7 +6,7 @@ echo "=== BUILDING BACKEND ==="
 npm install --legacy-peer-deps --prefix server
 
 echo "=== BUILDING FRONTEND ==="
-npm install --legacy-peer-deps --prefix client
+npm install --legacy-peer-deps --production=false --prefix client
 npm run build --prefix client
 
 echo "=== BUILD COMPLETE ==="
